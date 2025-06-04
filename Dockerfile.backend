@@ -1,0 +1,19 @@
+FROM node:18-alpine
+
+# Crear directorio de trabajo
+WORKDIR /app
+
+# Copiar package.json
+COPY backend/package*.json ./
+
+# Instalar dependencias
+RUN npm install
+
+# Copiar código fuente
+COPY backend/ .
+
+# Exponer puerto
+EXPOSE 3000
+
+# Comando para iniciar la aplicación
+CMD ["npm", "start"]

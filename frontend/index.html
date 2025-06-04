@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PaintStore - Galones de Pintura</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <nav class="navbar">
+            <div class="nav-container">
+                <h1 class="logo">🎨 PaintStore</h1>
+                <div class="cart-icon" onclick="toggleCart()">
+                    🛒 <span id="cart-count">0</span>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h2>Galones de Pintura Concentrada</h2>
+            <p>Los mejores colores para tu hogar</p>
+        </section>
+
+        <section class="products" id="products-container">
+            <!-- Los productos se cargan dinámicamente -->
+        </section>
+
+        <!-- Carrito de Compras -->
+        <div id="cart-modal" class="cart-modal">
+            <div class="cart-content">
+                <span class="close" onclick="toggleCart()">&times;</span>
+                <h2>Carrito de Compras</h2>
+                <div id="cart-items"></div>
+                <div class="cart-total">
+                    <strong>Total: $<span id="cart-total">0</span></strong>
+                </div>
+                <button class="checkout-btn" onclick="checkout()">Finalizar Compra</button>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/main.js"></script>
+    <script src="js/cart.js"></script>
+</body>
+</html>
