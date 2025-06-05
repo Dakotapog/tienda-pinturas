@@ -1,1 +1,2 @@
 por que no puedo recuperar un archivo
+al eliminarlo despues no puedo ejecutar el comando git restore
