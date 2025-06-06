@@ -9,7 +9,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '../frontend')));
+
+// ❌ REMOVER ESTA LÍNEA - El frontend se sirve desde el contenedor Nginx
+// app.use(express.static(path.join(__dirname, '../frontend')));
 
 // Datos de ejemplo (simula base de datos)
 let products = [
@@ -135,9 +137,18 @@ app.get('/api/orders', (req, res) => {
     res.json(orders);
 });
 
-// Ruta para servir el frontend
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+// ❌ REMOVER ESTA RUTA - El frontend se sirve desde Nginx
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(__dirname, '../frontend/index.html'));
+// });
+
+// Ruta de salud del API
+app.get('/api/health', (req, res) => {
+    res.json({ 
+        status: 'OK', 
+        message: 'API funcionando correctamente',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Iniciar servidor
