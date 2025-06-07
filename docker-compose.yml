@@ -52,9 +52,29 @@ services:
       - paint_network
     restart: unless-stopped
 
+  # Jenkins CI/CD
+  jenkins:
+    build:
+      context: ./jenkins
+      dockerfile: Dockerfile
+    container_name: paint_store_jenkins
+    ports:
+      - "8080:8080"    # Interface web de Jenkins
+      - "50000:50000"  # Puerto para agentes
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock  # Para usar Docker desde Jenkins
+      - .:/workspace    # Montar el proyecto completo
+    environment:
+      - JENKINS_OPTS=--httpPort=8080
+    networks:
+      - paint_network
+    restart: unless-stopped
+
 networks:
   paint_network:
     driver: bridge
 
 volumes:
   postgres_data:
+  jenkins_home:
