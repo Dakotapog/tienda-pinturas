@@ -31,7 +31,7 @@ pipeline {
                         # Limpiar workspace anterior
                         rm -rf .git || true
                         rm -rf * || true
-                        rm -rf .* || true
+                        rm -rf .* 2>/dev/null || true
                         
                         # Verificar Git
                         git --version
@@ -55,7 +55,7 @@ pipeline {
                         echo "Intentando clonar desde: ${GIT_REPO}"
                         
                         # Opción 1: Clonar directamente
-                        git clone ${GIT_REPO} . || {
+                        if ! git clone ${GIT_REPO} .; then
                             echo "❌ Error en git clone directo"
                             
                             # Opción 2: Inicializar y agregar remote
@@ -63,7 +63,7 @@ pipeline {
                             git remote add origin ${GIT_REPO}
                             git fetch origin
                             git checkout -b ${GIT_BRANCH} origin/${GIT_BRANCH} 2>/dev/null || git checkout ${GIT_BRANCH}
-                        }
+                        fi
                         
                         echo "✅ Código descargado exitosamente"
                         echo "Branch actual: $(git branch --show-current 2>/dev/null || echo 'main')"
@@ -104,10 +104,10 @@ pipeline {
                             cat package.json | head -20
                             
                             # Instalar dependencias
-                            npm install || {
+                            if ! npm install; then
                                 echo "❌ Error en npm install, intentando con --legacy-peer-deps"
                                 npm install --legacy-peer-deps
-                            }
+                            fi
                             
                             echo "✅ Dependencias instaladas"
                             echo "Paquetes instalados: $(npm list --depth=0 2>/dev/null | wc -l || echo 'N/A')"
@@ -206,11 +206,13 @@ pipeline {
                                 echo "✅ CSRF: Tokens implementados"
                                 echo "✅ Autenticación: JWT seguro"
                                 
-                                # Verificación de secretos
+                                # Verificación de secretos - SINTAXIS CORREGIDA
                                 echo ""
                                 echo "🔐 Verificando exposición de secretos..."
-                                if grep -r "password\|secret\|key" --include="*.js" --include="*.json" . | grep -v node_modules | grep -v ".git"; then
-                                    echo "⚠️  ADVERTENCIA: Posibles secretos detectados"
+                                SECRET_FILES=$(find . -name "*.js" -o -name "*.json" | grep -v node_modules | grep -v .git | xargs grep -l "password\\|secret\\|key" 2>/dev/null || true)
+                                if [ -n "$SECRET_FILES" ]; then
+                                    echo "⚠️  ADVERTENCIA: Posibles secretos detectados en:"
+                                    echo "$SECRET_FILES"
                                 else
                                     echo "✅ No se encontraron secretos expuestos"
                                 fi
@@ -244,9 +246,9 @@ pipeline {
                                     fi
                                     
                                     echo "🔨 Construyendo imagen para análisis..."
-                                    docker build -f $DOCKERFILE_NAME -t ${DOCKER_IMAGE}:security-scan . || {
+                                    if ! docker build -f $DOCKERFILE_NAME -t ${DOCKER_IMAGE}:security-scan .; then
                                         echo "⚠️ Error construyendo imagen, usando imagen base para análisis"
-                                    }
+                                    fi
                                     
                                     # Simulación de escaneo con Trivy
                                     echo ""
@@ -329,7 +331,11 @@ pipeline {
                                 # Validación de Docker Compose
                                 echo "🔍 Validando docker-compose.yml..."
                                 if [ -f "docker-compose.yml" ]; then
-                                    docker-compose config --quiet && echo "✅ docker-compose.yml válido" || echo "❌ Error en docker-compose.yml"
+                                    if docker-compose config --quiet; then
+                                        echo "✅ docker-compose.yml válido"
+                                    else
+                                        echo "❌ Error en docker-compose.yml"
+                                    fi
                                 else
                                     echo "⚠️ docker-compose.yml no encontrado"
                                 fi
@@ -376,7 +382,7 @@ pipeline {
                             fi
                             
                             echo "Construyendo con: $DOCKERFILE_NAME"
-                            docker build -f $DOCKERFILE_NAME -t ${DOCKER_IMAGE}:${DOCKER_TAG} . || {
+                            if ! docker build -f $DOCKERFILE_NAME -t ${DOCKER_IMAGE}:${DOCKER_TAG} .; then
                                 echo "❌ Error en build, creando Dockerfile básico..."
                                 
                                 # Crear Dockerfile básico si no funciona
@@ -390,7 +396,7 @@ EXPOSE 3000
 CMD ["node", "server.js"]
 EOF
                                 docker build -f Dockerfile.temp -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                            }
+                            fi
                             
                             docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
                             echo "✅ Imagen construida: ${DOCKER_IMAGE}:${DOCKER_TAG}"
@@ -413,20 +419,20 @@ EOF
                             echo "✅ docker-compose.yml encontrado"
                             
                             # Validar configuración
-                            docker-compose config --quiet || {
+                            if ! docker-compose config --quiet; then
                                 echo "❌ Error en docker-compose.yml"
                                 exit 1
-                            }
+                            fi
                             
                             # Limpiar contenedores anteriores
                             docker-compose down --remove-orphans || true
                             
                             # Iniciar servicios
-                            docker-compose up -d || {
+                            if ! docker-compose up -d; then
                                 echo "❌ Error al iniciar servicios"
                                 docker-compose logs
                                 exit 1
-                            }
+                            fi
                             
                             echo "✅ Servicios iniciados"
                             sleep 10
@@ -453,8 +459,17 @@ EOF
                         echo "📊 Verificación de conectividad:"
                         
                         # Intentar health check si existe endpoint
-                        curl -f http://localhost:3000/health 2>/dev/null && echo "✅ Health check: OK" || echo "⚠️  Health check: No disponible"
-                        curl -f http://localhost:3000/ 2>/dev/null && echo "✅ App disponible en puerto 3000" || echo "⚠️  App no disponible en puerto 3000"
+                        if curl -f http://localhost:3000/health 2>/dev/null; then
+                            echo "✅ Health check: OK"
+                        else
+                            echo "⚠️  Health check: No disponible"
+                        fi
+                        
+                        if curl -f http://localhost:3000/ 2>/dev/null; then
+                            echo "✅ App disponible en puerto 3000"
+                        else
+                            echo "⚠️  App no disponible en puerto 3000"
+                        fi
                         
                         echo "✅ Validación completada"
                     '''
@@ -480,7 +495,7 @@ EOF
                     echo "Rama: ${GIT_BRANCH}"
                     echo "Commit: $(git log -1 --oneline 2>/dev/null || echo 'No disponible')"
                     echo "Timestamp: $(date)"
-                    echo "Duración: $(expr ${BUILD_DURATION} / 1000 2>/dev/null || echo 'N/A') segundos"
+                    echo "Duración: N/A segundos"
                 '''
             }
         }
