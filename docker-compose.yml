@@ -57,7 +57,7 @@ services:
       context: ./jenkins
       dockerfile: Dockerfile
     container_name: paint_store_jenkins
-    user: "1000:1000"  # UID:GID del usuario jenkins - SOLUCIÓN AGREGADA
+    user: "1000:1001"  # UID:GID del usuario jenkins - SOLUCIÓN AGREGADA
     ports:
       - "8080:8080"    # Interface web de Jenkins
       - "50000:50000"  # Puerto para agentes

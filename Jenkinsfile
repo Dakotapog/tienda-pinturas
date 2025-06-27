@@ -456,6 +456,16 @@ EOF
                         }
                     }
                 }
+
+                stage('🐳 Verificar acceso a Docker') {
+                    steps {
+                        script {
+                            echo '🔍 Mostrando contenedores activos:'
+                            sh 'docker ps'
+                        }
+                    }
+                }
+
                 
                 stage('Performance Testing') {
                     steps {
