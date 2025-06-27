@@ -1,6 +1,11 @@
 FROM jenkins/jenkins:lts
 USER root
 
+# Instalar Git primero
+RUN apt-get update && \
+    apt-get install -y git && \
+    git --version
+
 # Instalar Docker
 RUN apt-get update && \
     apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release && \
@@ -13,7 +18,24 @@ RUN apt-get update && \
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
     apt-get install -y nodejs
 
+# Limpiar cache de apt
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*   
+
+# Configurar Git globalmente
+RUN git config --global user.name "Jenkins CI" && \
+    git config --global user.email "jenkins@localhost" && \
+    git config --global init.defaultBranch main
+
 USER jenkins
+
+# Copiar archivo de plugins
+COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
+
+RUN jenkins-plugin-cli --plugin-file /usr/share/jenkins/ref/plugins
+
+# Configurar Jenkins para usar Git
+ENV JENKINS_OPTS="--httpPort=8080"
+ENV JAVA_OPTS="-Djenkins.install.runSetupWizard=false"
 
 # Instalar plugins básicos
 COPY plugins.txt /usr/share/jenkins/ref/plugins.txt
