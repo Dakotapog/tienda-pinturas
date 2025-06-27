@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   # Base de datos PostgreSQL
   database:
@@ -68,6 +67,7 @@ services:
       - .:/workspace    # Montar el proyecto completo
     environment:
       - JENKINS_OPTS=--httpPort=8080
+      - DOCKER_HOST=unix:///var/run/docker.sock
     networks:
       - paint_network
     restart: unless-stopped
