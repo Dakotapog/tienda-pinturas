@@ -6,7 +6,7 @@ pipeline {
         DOCKER_TAG = "${BUILD_NUMBER}"
         DOCKER_REGISTRY = 'localhost:5000' // o tu registry
         DB_HOST = 'postgres-db'
-        NODE_ENV = 'production'
+        NODE_ENV = "test"
         SONAR_HOST_URL = 'http://sonarqube:9000'
         TRIVY_VERSION = 'latest'
         PERFORMANCE_THRESHOLD = '2000' // Response time in ms
@@ -25,12 +25,12 @@ pipeline {
         retry(2)
         timestamps()
         skipDefaultCheckout(true)
-        ansiColor('xterm')
+        
     }
     
-    tools {
-        nodejs '18' // Asegúrate de tener Node.js 18 configurado en Jenkins
-    }
+    //tools {
+    //    nodejs '18' // Asegúrate de tener Node.js 18 configurado en Jenkins
+    //}
     
     stages {
         stage('🔧 Environment Setup') {
