@@ -305,7 +305,6 @@
                                 always {
                                     // Publicar resultados de tests
                                     publishTestResults testResultsPattern: 'junit.xml'
-                                    //publishCoverage adapters: [coberturaAdapter('coverage/cobertura-coverage.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
                                 }
                             }
                         }
