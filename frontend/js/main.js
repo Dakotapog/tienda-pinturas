@@ -1,7 +1,5 @@
 // main.js
 
-/* global updateCartDisplay, showNotification */ // ← Declaramos las funciones globales usadas
-
 // Variables globales
 let products = [];
 let cart = [];
@@ -79,7 +77,7 @@ function displayProducts() {
     });
 }
 
-// Función para agregar producto al carrito
+// Función para agregar producto al carrito - ✅ FUNCIÓN USADA
 function addToCart(productId) {
     const product = products.find(p => p.id === productId);
     if (!product) return;
@@ -99,9 +97,8 @@ function addToCart(productId) {
     showNotification('Producto agregado al carrito');
 }
 
-// Función para mostrar notificaciones
+// Función para mostrar notificaciones - ✅ FUNCIÓN USADA
 function showNotification(message) {
-    // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -118,8 +115,19 @@ function showNotification(message) {
     
     document.body.appendChild(notification);
     
-    // Remover después de 3 segundos
     setTimeout(() => {
         notification.remove();
     }, 3000);
 }
+
+// Función para actualizar visualización del carrito
+function updateCartDisplay() {
+    const cartCount = document.getElementById('cart-count');
+    const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartCount.textContent = totalItems;
+}
+
+// Hacer funciones disponibles globalmente
+window.addToCart = addToCart;
+window.showNotification = showNotification;
+window.updateCartDisplay = updateCartDisplay;

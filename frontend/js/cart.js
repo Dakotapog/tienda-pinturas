@@ -1,6 +1,9 @@
 // cart.js
 
-/* global cart, API_BASE_URL, showNotification */ // ← Añadimos esta línea para evitar errores ESLint
+/* global API_BASE_URL, showNotification */ 
+
+// ⚠️ CAMBIO CRÍTICO: Declarar cart como variable local, no global
+let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
 // Funciones del carrito de compras
 
@@ -9,6 +12,9 @@ function updateCartDisplay() {
     const cartCount = document.getElementById('cart-count');
     const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
     cartCount.textContent = totalItems;
+    
+    // Guardar en localStorage cada vez que se actualiza
+    localStorage.setItem('cart', JSON.stringify(cart));
 }
 
 // Mostrar/ocultar modal del carrito
@@ -62,7 +68,7 @@ function displayCartItems() {
     cartTotalElement.textContent = total.toLocaleString();
 }
 
-// Cambiar cantidad de un producto
+// Cambiar cantidad de un producto - ✅ FUNCIÓN USADA
 function changeQuantity(productId, change) {
     const item = cart.find(item => item.id === productId);
     if (!item) return;
@@ -79,13 +85,17 @@ function changeQuantity(productId, change) {
 
 // Remover producto del carrito
 function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
+    // ⚠️ CAMBIO: Usar splice en lugar de reasignación
+    const index = cart.findIndex(item => item.id === productId);
+    if (index > -1) {
+        cart.splice(index, 1);
+    }
     updateCartDisplay();
     displayCartItems();
     showNotification('Producto eliminado del carrito');
 }
 
-// Finalizar compra
+// Finalizar compra - ✅ FUNCIÓN USADA
 async function checkout() {
     if (cart.length === 0) {
         alert('Tu carrito está vacío');
@@ -103,7 +113,8 @@ async function checkout() {
         
         if (response.ok) {
             alert('¡Compra realizada con éxito!');
-            cart = [];
+            // ⚠️ CAMBIO: Limpiar array sin reasignación
+            cart.splice(0, cart.length);
             updateCartDisplay();
             toggleCart();
         } else {
@@ -112,7 +123,8 @@ async function checkout() {
     } catch (error) {
         console.error('Error en checkout:', error);
         alert('¡Compra simulada realizada con éxito!');
-        cart = [];
+        // ⚠️ CAMBIO: Limpiar array sin reasignación
+        cart.splice(0, cart.length);
         updateCartDisplay();
         toggleCart();
     }
@@ -125,3 +137,9 @@ window.onclick = function(event) {
         modal.style.display = 'none';
     }
 };
+
+// Hacer funciones disponibles globalmente
+window.changeQuantity = changeQuantity;
+window.removeFromCart = removeFromCart;
+window.checkout = checkout;
+window.toggleCart = toggleCart;
