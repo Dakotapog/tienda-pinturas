@@ -30,6 +30,7 @@ pipeline {
     stages {
         stage('Environment Setup') {
             steps {
+                cleanWs() // <-- AGREGA ESTA LÍNEA AQUÍ
                 script {
                     echo "Configurando entorno de CI/CD..."
                     sh '''
