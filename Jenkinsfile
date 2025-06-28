@@ -130,7 +130,8 @@ pipeline {
   "devDependencies": {
     "jest": "^29.5.0",
     "eslint": "^8.39.0",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3"
   }
 }
 EOF
@@ -178,8 +179,15 @@ EOF
                         # Limpiar cache de NPM
                         npm cache clean --force
                         
-                        # Instalar dependencias
+                        # Instalar dependencias incluyendo supertest
                         echo "📦 Instalando dependencias de producción y desarrollo..."
+                        
+                        # Verificar si package.json contiene supertest
+                        if ! grep -q "supertest" package.json; then
+                            echo "⚠️ Agregando supertest a devDependencies..."
+                            npm install --save-dev supertest@^6.3.3
+                        fi
+                        
                         if ! npm ci; then
                             echo "⚠️ npm ci falló, intentando npm install..."
                             npm install
@@ -202,12 +210,16 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.{js,jsx}',
-    '!src/**/*.test.{js,jsx}'
+    'frontend/**/*.{js,jsx}',
+    'backend/**/*.{js,jsx}',
+    '!src/**/*.test.{js,jsx}',
+    '!**/node_modules/**'
   ],
   testMatch: [
     '**/test/**/*.test.js',
     '**/*.test.js'
-  ]
+  ],
+  coverageReporters: ['text', 'lcov', 'cobertura', 'html']
 };
 EOF
                         fi
@@ -229,7 +241,8 @@ module.exports = {
   },
   rules: {
     'no-unused-vars': 'warn',
-    'no-console': 'off'
+    'no-console': 'off',
+    'no-global-assign': 'error'
   }
 };
 EOF
@@ -239,6 +252,8 @@ EOF
                         mkdir -p test
                         if [ ! -f "test/basic.test.js" ]; then
                             cat > test/basic.test.js << 'EOF'
+const request = require('supertest');
+
 describe('Basic Tests', () => {
   test('should pass basic test', () => {
     expect(1 + 1).toBe(2);
@@ -246,6 +261,10 @@ describe('Basic Tests', () => {
   
   test('should test environment', () => {
     expect(process.env.NODE_ENV).toBeDefined();
+  });
+  
+  test('should verify supertest is available', () => {
+    expect(typeof request).toBe('function');
   });
 });
 EOF
@@ -270,7 +289,7 @@ EOF
                                 export NODE_ENV=test
                                 
                                 # Ejecutar tests unitarios con cobertura
-                                if npm test -- --coverage --ci --coverageReporters=text --coverageReporters=lcov; then
+                                if npm test -- --coverage --ci --coverageReporters=text --coverageReporters=lcov --coverageReporters=cobertura; then
                                     echo "✅ Tests unitarios: PASARON"
                                 else
                                     echo "❌ Tests unitarios: FALLARON"
@@ -337,9 +356,15 @@ EOF
                                 mkdir -p test/integration
                                 if [ ! -f "test/integration/api.test.js" ]; then
                                     cat > test/integration/api.test.js << 'EOF'
+const request = require('supertest');
+
 describe('Integration Tests', () => {
   test('should run integration test', () => {
     expect(true).toBe(true);
+  });
+  
+  test('should verify supertest is working', () => {
+    expect(typeof request).toBe('function');
   });
 });
 EOF
@@ -772,7 +797,6 @@ EOF
                 }
             }
         }
-        
         stage('🔨 Build Docker Images') {
             steps {
                 script {
@@ -1105,8 +1129,21 @@ EOF
                     archiveArtifacts artifacts: 'artifacts/**/*', allowEmptyArchive: true
                     
                     // Publicar reportes de cobertura si existen
-                    publishCoverage adapters: [coberturaAdapter('coverage/cobertura-coverage.xml')], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+                    // ❌ LÍNEA 579 - ERROR ACTUAL:
+                    // ✅ CORRECCIÓN - REEMPLAZAR CON:
+            script {
+                if (fileExists('coverage/cobertura-coverage.xml')) {
+                     publishCoverage adapters: [
+                         coberturaAdapter('coverage/cobertura-coverage.xml')
+                             ], sourceFileResolver: sourceFiles('STORE_LAST_BUILD')
+                             echo "📈 Reporte de cobertura Cobertura publicado"
+                                } else if (fileExists('coverage/lcov.info')) {
+                                    echo "📈 Reporte de cobertura LCOV disponible en artifacts"
+                                    } else {
+                                         echo "⚠️ No se encontraron reportes de cobertura"
                 }
+            }
+        }
                 
                 success {
                     script {

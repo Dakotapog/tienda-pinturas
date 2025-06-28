@@ -23,6 +23,7 @@
     "jest-junit": "^16.0.0",
     "nodemon": "^2.0.22",
     "supertest": "^6.3.3"
+      
   },
   "jest": {
     "testEnvironment": "node",
