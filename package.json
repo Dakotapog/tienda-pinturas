@@ -1,5 +1,22 @@
 {
+  "name": "tienda-pinturas",
+  "version": "1.0.0",
+  "description": "Tienda online para venta de galones de pintura",
+  "scripts": {
+    "test": "cd backend && npm test",
+    "test:coverage": "cd backend && npm run test:coverage",
+    "test:local": "cd backend && npm run test:local",
+    "test:debug": "cd backend && npm run test:debug",
+    "install:all": "npm install && cd backend && npm install",
+    "install:dev": "npm install --only=dev && cd backend && npm install --only=dev",
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "lint": "cd backend && npm run lint || echo 'Lint not configured'"
+  },
   "devDependencies": {
     "supertest": "^6.3.4"
-  }
+  },
+  "workspaces": [
+    "backend"
+  ]
 }
