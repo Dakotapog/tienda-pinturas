@@ -33,7 +33,7 @@ pipeline {
                 script {
                     cleanWs() // <--- Agrega esta línea aquí
                     echo "Configurando entorno de CI/CD..."
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== CONFIGURACIÓN DEL ENTORNO ==="
                         
                         # Limpiar workspace
@@ -77,7 +77,7 @@ pipeline {
                     echo "📥 Obteniendo código fuente..."
                     checkout scm
                     
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== VALIDACIÓN DEL CÓDIGO FUENTE ==="
                         echo "Branch: $(git branch --show-current)"
                         echo "Commit: $(git log -1 --oneline)"
@@ -169,7 +169,7 @@ EOF
             steps {
                 script {
                     echo "📦 Instalando dependencias..."
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== INSTALACIÓN DE DEPENDENCIAS ==="
                         
                         # Verificar Node.js y NPM
@@ -282,7 +282,7 @@ EOF
                     steps {
                         script {
                             echo "🧪 Ejecutando pruebas unitarias..."
-                            sh '''
+                            sh '''#!/bin/bash
                                 echo "=== PRUEBAS UNITARIAS ==="
                                 
                                 # Configurar entorno de test
@@ -323,7 +323,7 @@ EOF
                     steps {
                         script {
                             echo "🔍 Analizando calidad del código..."
-                            sh '''
+                            sh '''#!/bin/bash
                                 echo "=== ANÁLISIS DE CALIDAD DEL CÓDIGO ==="
                                 
                                 # Ejecutar ESLint
@@ -346,7 +346,7 @@ EOF
                     steps {
                         script {
                             echo "🔗 Ejecutando pruebas de integración..."
-                            sh '''
+                            sh '''#!/bin/bash
                                 echo "=== PRUEBAS DE INTEGRACIÓN ==="
                                 
                                 # Configurar entorno de integración
@@ -390,7 +390,7 @@ EOF
                     steps {
                         script {
                             echo "🔒 Ejecutando auditoría de seguridad..."
-                            sh '''
+                            sh '''#!/bin/bash
                                 echo "=== AUDITORÍA DE SEGURIDAD ==="
                                 
                                 # NPM Audit
@@ -434,7 +434,7 @@ EOF
                     steps {
                         script {
                             echo "🐳 Escaneando seguridad de Docker..."
-                            sh '''
+                            sh '''#!/bin/bash
                                 echo "=== ANÁLISIS DE SEGURIDAD DOCKER ==="
                                 
                                 # Construir imagen temporal para escaneo
@@ -480,7 +480,7 @@ EOF
                     steps {
                         script {
                             echo "⚡ Ejecutando pruebas de rendimiento..."
-                            sh '''
+                            sh '''#!/bin/bash
                                 echo "=== PRUEBAS DE RENDIMIENTO ==="
                                 
                                 # Crear servidor básico si no existe
@@ -555,7 +555,7 @@ EOF
             steps {
                 script {
                     echo "🧪 Ejecutando pruebas..."
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== PREPARACIÓN DE TESTS ==="
                         
                         # Verificar la estructura del proyecto
@@ -801,7 +801,7 @@ EOF
             steps {
                 script {
                     echo "🔨 Construyendo imágenes Docker..."
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== CONSTRUCCIÓN DE IMÁGENES DOCKER ==="
                         
                         # Verificar Docker funcional
@@ -871,7 +871,7 @@ EOF
             steps {
                 script {
                     echo "🚀 Desplegando en staging..."
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== DESPLIEGUE EN STAGING ==="
                         
                         # Verificar docker-compose
@@ -977,7 +977,7 @@ EOF
             steps {
                 script {
                     echo "✅ Validación post-despliegue..."
-                    sh '''
+                    sh '''#!/bin/bash
                         echo "=== VALIDACIÓN POST-DESPLIEGUE ==="
                         
                         # Función para verificar endpoint
@@ -1090,7 +1090,7 @@ EOF
         always {
             script {
                 echo "🧹 Limpieza final y archivado..."
-                sh '''
+                sh '''#!/bin/bash
                             # Crear directorio de artefactos
                             mkdir -p artifacts
                             
@@ -1148,7 +1148,7 @@ EOF
                 success {
                     script {
                         echo "🎉 Pipeline completado exitosamente!"
-                        sh '''
+                        sh '''#!/bin/bash
                             echo ""
                             echo "================================================="
                             echo "🎉 ÉXITO: BUILD #${BUILD_NUMBER} COMPLETADO"
@@ -1183,7 +1183,7 @@ EOF
                 failure {
                     script {
                         echo "❌ Pipeline falló - Ejecutando rollback..."
-                        sh '''
+                        sh '''#!/bin/bash
                             echo ""
                             echo "================================================="
                             echo "❌ FALLO: BUILD #${BUILD_NUMBER}"
@@ -1217,7 +1217,7 @@ EOF
                 cleanup {
                     script {
                         echo "🧹 Limpieza final de recursos..."
-                        sh '''
+                        sh '''#!/bin/bash
                             # (Ignorado) docker-compose de pruebas específicas no presente
                             # docker-compose -f docker-compose.test.yml down || true
                             
