@@ -525,6 +525,202 @@ EOF
                 }
             }
         }
+
+        stage('🧪 Run Tests') {
+            steps {
+                script {
+                    echo "🧪 Ejecutando pruebas..."
+                    sh '''
+                        echo "=== PREPARACIÓN DE TESTS ==="
+                        
+                        # Verificar y instalar dependencias de test faltantes
+                        echo "🔍 Verificando dependencias de test..."
+                        
+                        # Lista de dependencias de test comunes que podrían faltar
+                        TEST_DEPS=(
+                            "supertest"
+                            "jest"
+                            "@types/jest"
+                            "jest-environment-node"
+                        )
+                        
+                        MISSING_DEPS=()
+                        
+                        # Verificar cada dependencia
+                        for dep in "${TEST_DEPS[@]}"; do
+                            if ! npm list "$dep" >/dev/null 2>&1; then
+                                echo "⚠️ Dependencia faltante: $dep"
+                                MISSING_DEPS+=("$dep")
+                            else
+                                echo "✅ Dependencia presente: $dep"
+                            fi
+                        done
+                        
+                        # Instalar dependencias faltantes
+                        if [ ${#MISSING_DEPS[@]} -gt 0 ]; then
+                            echo ""
+                            echo "📦 Instalando dependencias de test faltantes..."
+                            npm install --save-dev "${MISSING_DEPS[@]}" || {
+                                echo "❌ Error instalando dependencias de test"
+                                echo "🔧 Intentando instalación alternativa..."
+                                
+                                # Instalación alternativa una por una
+                                for dep in "${MISSING_DEPS[@]}"; do
+                                    echo "📦 Instalando $dep..."
+                                    npm install --save-dev "$dep" --legacy-peer-deps || {
+                                        echo "⚠️ No se pudo instalar $dep, continuando..."
+                                    }
+                                done
+                            }
+                        else
+                            echo "✅ Todas las dependencias de test están presentes"
+                        fi
+                        
+                        echo ""
+                        echo "=== EJECUCIÓN DE TESTS ==="
+                        
+                        # Configurar entorno de test
+                        export NODE_ENV=test
+                        export CI=true
+                        
+                        # Verificar si Jest está configurado
+                        if [ ! -f "jest.config.js" ] && [ ! -f "jest.config.json" ]; then
+                            echo "📝 Creando configuración básica de Jest..."
+                            cat > jest.config.js << 'EOF'
+module.exports = {
+  testEnvironment: 'node',
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'backend/**/*.js',
+    'src/**/*.js',
+    '!**/node_modules/**',
+    '!**/coverage/**',
+    '!**/test/**'
+  ],
+  testMatch: [
+    '**/test/**/*.test.js',
+    '**/tests/**/*.test.js',
+    '**/__tests__/**/*.js'
+  ],
+  verbose: true,
+  forceExit: true,
+  detectOpenHandles: true
+};
+EOF
+        fi
+        
+        # Ejecutar tests con manejo de errores mejorado
+        echo "🧪 Ejecutando pruebas unitarias..."
+        TEST_EXIT_CODE=0
+        
+        # Intentar ejecutar tests con diferentes configuraciones
+        if npm test -- --coverage --ci --coverageReporters=text --coverageReporters=lcov; then
+            echo "✅ Tests ejecutados exitosamente"
+        else
+            TEST_EXIT_CODE=$?
+            echo "❌ Tests fallaron con código $TEST_EXIT_CODE"
+            
+            echo ""
+            echo "🔍 DIAGNÓSTICO DE ERRORES:"
+            
+            # Verificar archivos de test existentes
+            echo "📁 Archivos de test encontrados:"
+            find . -name "*.test.js" -o -name "*.spec.js" | head -10
+            
+            # Verificar estructura del proyecto
+            echo ""
+            echo "📂 Estructura del proyecto:"
+            ls -la
+            
+            # Intentar ejecutar solo tests básicos
+            echo ""
+            echo "🔄 Intentando ejecutar solo tests básicos..."
+            if [ -f "test/basic.test.js" ]; then
+                npx jest test/basic.test.js --verbose || true
+            fi
+            
+            # Verificar dependencias instaladas
+            echo ""
+            echo "📦 Dependencias instaladas relevantes:"
+            npm list --depth=0 | grep -E "(jest|supertest|test)" || echo "No se encontraron dependencias de test"
+            
+            # Crear reporte de error detallado
+            cat > test-error-report.json << EOF
+{
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "exit_code": $TEST_EXIT_CODE,
+  "missing_dependencies": [$(printf '"%s",' "${MISSING_DEPS[@]}" | sed 's/,$//')]],
+  "test_files_found": $(find . -name "*.test.js" -o -name "*.spec.js" | wc -l),
+  "node_version": "$(node --version)",
+  "npm_version": "$(npm --version)"
+}
+EOF
+            
+            # Dependiendo de la estrategia, podemos fallar o continuar
+            if [ "${FAIL_ON_TEST_ERROR:-true}" = "true" ]; then
+                echo ""
+                echo "❌ Tests unitarios: FALLARON"
+                echo "📄 Reporte de error guardado en: test-error-report.json"
+                exit $TEST_EXIT_CODE
+            else
+                echo ""
+                echo "⚠️ Tests unitarios: FALLARON (continuando según configuración)"
+                echo "📄 Reporte de error guardado en: test-error-report.json"
+            fi
+        fi
+        
+        # Generar reporte de cobertura si existe
+        if [ -d "coverage" ]; then
+            echo ""
+            echo "📊 REPORTE DE COBERTURA:"
+            if [ -f "coverage/lcov-report/index.html" ]; then
+                echo "✅ Reporte HTML generado en: coverage/lcov-report/index.html"
+            fi
+            
+            if [ -f "coverage/lcov.info" ]; then
+                echo "✅ Archivo LCOV generado en: coverage/lcov.info"
+            fi
+            
+            # Mostrar resumen de cobertura si está disponible
+            if [ -f "coverage/coverage-summary.json" ]; then
+                echo "📈 Resumen de cobertura:"
+                cat coverage/coverage-summary.json | head -20 || true
+            fi
+        fi
+        
+        # Generar reporte de tests exitoso
+        if [ $TEST_EXIT_CODE -eq 0 ]; then
+            cat > test-success-report.json << EOF
+{
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "status": "success",
+  "test_files_executed": $(find . -name "*.test.js" -o -name "*.spec.js" | wc -l),
+  "coverage_available": $([ -d "coverage" ] && echo "true" || echo "false")
+}
+EOF
+            echo "✅ Tests completados exitosamente"
+        fi
+                    '''
+                }
+            }
+            post {
+                always {
+                    // Archivar reportes de test y cobertura
+                    archiveArtifacts artifacts: 'coverage/**/*', allowEmptyArchive: true
+                    archiveArtifacts artifacts: '*-report.json', allowEmptyArchive: true
+                    
+                    // Publicar resultados de test si están disponibles
+                    script {
+                        if (fileExists('coverage/lcov.info')) {
+                            echo "📊 Publicando reporte de cobertura..."
+                        }
+                        if (fileExists('test-error-report.json')) {
+                            echo "⚠️ Se encontraron errores en los tests - ver reporte archivado"
+                        }
+                    }
+                }
+            }
+        }
         
         stage('🔨 Build Docker Images') {
             steps {
