@@ -265,7 +265,7 @@ EOF
         stage('🧪 Quality & Testing') {
             parallel {
                 stage('Unit Tests') {
-                    steps {
+                    steps { 
                         script {
                             echo "🧪 Ejecutando pruebas unitarias..."
                             sh '''
@@ -273,6 +273,10 @@ EOF
                                 
                                 # Configurar entorno de test
                                 export NODE_ENV=test
+                                
+                                # Instalar dependencias
+                                cd backend
+                                npm ci
                                 
                                 # Ejecutar tests unitarios
                                 if npm run test -- --coverage --ci --reporters=default --reporters=jest-junit; then
