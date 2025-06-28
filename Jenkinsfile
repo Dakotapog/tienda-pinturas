@@ -28,20 +28,19 @@ pipeline {
     }
     
     stages {
-        stage('🔧 Environment Setup') {
+        stage('Environment Setup') {
             steps {
                 script {
-                    echo "🔧 Configurando entorno de CI/CD..."
+                    echo "Configurando entorno de CI/CD..."
                     sh '''
                         echo "=== CONFIGURACIÓN DEL ENTORNO ==="
                         
                         # Limpiar workspace
                         rm -rf .git || true
-                        rm -rf * || true
-                        find . -name ".*" -not -name "." -not -name ".." -exec rm -rf {} + 2>/dev/null || true
+                        find . -path "*/.*" ! -path "." ! -path ".." -exec rm -rf {} + 2>/dev/null || true
                         
                         # Verificar herramientas esenciales
-                        echo "📋 Verificando herramientas..."
+                        echo "Verificando herramientas..."
                         echo "Git: $(git --version)"
                         echo "Node.js: $(node --version)"
                         echo "NPM: $(npm --version)"
