@@ -1,3 +1,7 @@
+// cart.js
+
+/* global cart, API_BASE_URL, showNotification */ // ← Añadimos esta línea para evitar errores ESLint
+
 // Funciones del carrito de compras
 
 // Actualizar visualización del carrito
@@ -120,4 +124,4 @@ window.onclick = function(event) {
     if (event.target === modal) {
         modal.style.display = 'none';
     }
-}
+};

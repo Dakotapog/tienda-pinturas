@@ -1,3 +1,7 @@
+// main.js
+
+/* global updateCartDisplay, showNotification */ // ← Declaramos las funciones globales usadas
+
 // Variables globales
 let products = [];
 let cart = [];

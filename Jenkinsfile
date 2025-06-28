@@ -1006,8 +1006,8 @@ EOF
             script {
                 echo "🧹 Limpieza final de recursos..."
                 sh '''
-                    # Limpiar contenedores de prueba
-                    docker-compose -f docker-compose.test.yml down || true
+                    # (Ignorado) docker-compose de pruebas específicas no presente
+                    # docker-compose -f docker-compose.test.yml down || true
                     
                     # Limpiar imágenes temporales (conservar las principales)
                     docker image prune -f || true
@@ -1024,5 +1024,3 @@ EOF
                 '''
             }
         }
-    }
-}
